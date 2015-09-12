@@ -222,8 +222,21 @@ bool MP1Node::recvCallBack(void *env, char *data, int size ) {
 
 	assert(size >= sizeof(MessageHdr));
 	MessageHdr* msg = (MessageHdr*) data;
+	Address  *src_addr = (Address * )(msg + 1);
+	
+	size -=sizeof(MessageHdr) + sizeof(Address) + 1;
+	data +=sizeof(MessageHdr) + sizeof(Address) + 1;
+	
+	switch (msg->msgType){
+	case JOINREQ:
+		onJoin(src_addr, data ,size);
+		onHeartbeat(src_addr, data, size);
+		break;
+	}
 }
+void MP1Node::onJoin(Address* addr, void* data, size_t size){
 
+}
 /**
  * FUNCTION NAME: nodeLoopOps
  *
