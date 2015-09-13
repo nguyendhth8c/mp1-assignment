@@ -232,11 +232,48 @@ bool MP1Node::recvCallBack(void *env, char *data, int size ) {
 		onJoin(src_addr, data ,size);
 		onHeartbeat(src_addr, data, size);
 		break;
+	case PING:
+		onHeartbeat(src_addr, data,size);
+		break;
+	case JOINREP:
+	{
+		memberNode->inGroup = 1;
+		stringstream msg;
+		msg <<"JOIN tu" << src_addr->getAddress();
+		msg << "data" << *(long*)(data);
+		log->LOG(&memberNode->addr,msg.str().c_str());
+		onHeartbeat(src_addr, data, size);
+		break;
+		}
+	default:
+		log->LOG(&memberNode->addr, "Received other msg");
+		break;
 	}
-}
-void MP1Node::onJoin(Address* addr, void* data, size_t size){
 
 }
+	Address AddressFromMLE(MemberListEntry* mle) {
+		Address a;
+		memcpy(a.addr, &mle->id, sizeof(int));
+		memcpy(&a.addr[4], &mle->port, sizeof(short));
+		return a;
+	}
+void MP1Node::onJoin(Address* addr, void* data, size_t size){
+	MessageHdr* msg;
+	size_t msgsize = sizeof(MessageHdr) + sizeof (memberNode->addr) + sizeof(long) + 1;
+    msg = (MessageHdr *) malloc(msgsize *sizeof(char));
+    msg->msgType = JOINREP;
+    memcpy((char *)(msg + 1), &memberNode->addr, sizeof(memberNode->addr));
+    memcpy((char *)(msg+1) + sizeof(memberNode->addr) + 1, &memberNode->heartbeat, sizeof(long));
+    stringstream ss;
+    ss<<"Sending JOINREP to" <<addr->getAddress()<<"heartbeat" <<memberNode->heartbeat;
+    log->LOG(&memberNode->addr, ss.str().c_str());
+    emulNet->ENsend(&memberNode->addr,addr,(char *) msg,msgsize);
+    free(msg);
+}
+void MP1Node::onHeartbeat(Address* addr, void* data, size_t size){
+
+}
+
 /**
  * FUNCTION NAME: nodeLoopOps
  *
