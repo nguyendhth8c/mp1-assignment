@@ -271,9 +271,26 @@ void MP1Node::onJoin(Address* addr, void* data, size_t size){
     free(msg);
 }
 void MP1Node::onHeartbeat(Address* addr, void* data, size_t size){
+    std::stringstream msgs;
+    assert(size >=sizeof(long));
+    long *heartbeat = (long*) data;
+    bool newData = UpdateMemberList(addr, *heartbeat);
+    if (newData)
+    {
+        LogMemberList();
 
+  
+    }
 }
-
+void MP1Node::LogMemberList(){
+    stringstream msg;
+    msg << "[";
+        for (vector<MemberListEntry>::iterator it = memberNode->memberList.begin(); it != memberNode->memberList.end();it++)
+        {
+            msg <<it>>getid() << ":" <<it->gethearbeat()<< "("<<it->gettimestamp<< "), ";
+        }
+        msg<<"]";
+}
 /**
  * FUNCTION NAME: nodeLoopOps
  *
