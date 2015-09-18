@@ -96,8 +96,8 @@ int MP1Node::initThisNode(Address *joinaddr) {
 	/*
 	 * This function is partially implemented and may require changes
 	 */
-	int id = *(int*)(&memberNode->addr.addr);
-	int port = *(short*)(&memberNode->addr.addr[4]);
+	//int id = *(int*)(&memberNode->addr.addr);
+	//int port = *(short*)(&memberNode->addr.addr[4]);
 
 	memberNode->bFailed = false;
 	memberNode->inited = true;
@@ -140,7 +140,7 @@ int MP1Node::introduceSelfToGroup(Address *joinaddr) {
         memcpy((char *)(msg+1) + 1 + sizeof(memberNode->addr.addr), &memberNode->heartbeat, sizeof(long));
 
 #ifdef DEBUGLOG
-        sprintf(s, "Trying to join...");
+        sprintf(s, "Trying to join...");/////////////
         log->LOG(&memberNode->addr, s);
 #endif
 
@@ -210,6 +210,35 @@ void MP1Node::checkMessages() {
     return;
 }
 
+void MP1Node::updateMember(int id, short port,long heartbeat){
+    vector<MemberListEntry>::iterator it = memberNode->memberList.begin();
+    for (; it != memberNode->memberList.end(); ++it){
+        if (it->id == id && it->port ==port){
+            if (heartbeat > it->heartbeat){
+                it->setheartbeat(heartbeat);
+                it->settimestamp(par->getcurrtime);
+            }
+            return;
+        }
+    }
+    MemberListEntry memberEntry(id,port,heartbeat,par->getcurrtime);
+    membetNode->memberList.push_back(memberEntry);
+
+#ifdef DEBUGLOG
+    Address joinaddr;
+    memcpy(&joinaddr.addr[0],id,sizeof(int));
+    memcpy(&joinaddr.addr[4], &port, sizeof(short));
+    log->logNodeAdd(&memberNode->addr,&joinaddr);
+#endif
+}
+
+void MP1Node::updateMember(MemberListEntry& member){
+    updateMember.(member.getid(), member.getport(), member.gethearbeat());
+}
+
+int MP1Node::memcpyMemberListEntry(char * data, MemberListEntry& member)
+
+
 /**
  * FUNCTION NAME: recvCallBack
  *
@@ -220,7 +249,7 @@ bool MP1Node::recvCallBack(void *env, char *data, int size ) {
 	 * Your code goes here
 	 */
 
-	assert(size >= sizeof(MessageHdr));
+	/* assert(size >= sizeof(MessageHdr));
 	MessageHdr* msg = (MessageHdr*) data;
 	Address  *src_addr = (Address * )(msg + 1);
 	
@@ -248,16 +277,16 @@ bool MP1Node::recvCallBack(void *env, char *data, int size ) {
 	default:
 		log->LOG(&memberNode->addr, "Received other msg");
 		break;
-	}
+	} */
 
 }
-	Address AddressFromMLE(MemberListEntry* mle) {
+/*	Address AddressFromMLE(MemberListEntry* mle) {
 		Address a;
 		memcpy(a.addr, &mle->id, sizeof(int));
 		memcpy(&a.addr[4], &mle->port, sizeof(short));
 		return a;
-	}
-void MP1Node::onJoin(Address* addr, void* data, size_t size){
+	} */
+/*void MP1Node::onJoin(Address* addr, void* data, size_t size){
 	MessageHdr* msg;
 	size_t msgsize = sizeof(MessageHdr) + sizeof (memberNode->addr) + sizeof(long) + 1;
     msg = (MessageHdr *) malloc(msgsize *sizeof(char));
@@ -269,8 +298,8 @@ void MP1Node::onJoin(Address* addr, void* data, size_t size){
     log->LOG(&memberNode->addr, ss.str().c_str());
     emulNet->ENsend(&memberNode->addr,addr,(char *) msg,msgsize);
     free(msg);
-}
-void MP1Node::onHeartbeat(Address* addr, void* data, size_t size){
+} */
+/*void MP1Node::onHeartbeat(Address* addr, void* data, size_t size){
     std::stringstream msgs;
     assert(size >=sizeof(long));
     long *heartbeat = (long*) data;
@@ -281,9 +310,9 @@ void MP1Node::onHeartbeat(Address* addr, void* data, size_t size){
         SendHBSomewhere(addr, *heartbeat);
   
     }
-}
+} */
 
-bool MP1Node::UpdateMemberList(Address *addr, long heartbeat){
+/*bool MP1Node::UpdateMemberList(Address *addr, long heartbeat){
     Vector<MemberListEntry>::iterator it;
         for(it = memberNode->memberList.begin(); it != memberNode->memberList.end(); it++){
             if ((AddressFromMLE(&(*it)) == *addr) == 0)
@@ -308,15 +337,15 @@ memberNode->memberList.push_back(mle);
         log->logNodeAdd(&memberNode->addr, addr);
         return true;
 
-}
-void MP1Node::initMemberListTable(Member *memberNode, int id, short port) {
+}*/
+void MP1Node::initMemberListTable(Member *memberNode/*, int id, short port*/) {
     memberNode->memberList.clear();
-    MemberListEntry mle = MemberListEntry(id,port);
-    mle.settimestamp(par->getcurrtime());
-    mle.setheartbeat(memberNode->heartbeat);
-    memberNode->memberList.push_back(mle);
-}
-void MP1Node::LogMemberList(){
+  //  MemberListEntry mle = MemberListEntry(id,port);
+  //  mle.settimestamp(par->getcurrtime());
+  //  mle.setheartbeat(memberNode->heartbeat);
+//    memberNode->memberList.push_back(mle);
+} 
+/*void MP1Node::LogMemberList(){
     stringstream msg;
     msg << "[";
         for (vector<MemberListEntry>::iterator it = memberNode->memberList.begin(); it != memberNode->memberList.end();it++)
@@ -324,9 +353,9 @@ void MP1Node::LogMemberList(){
             msg <<it>>getid() << ":" <<it->gethearbeat()<< "("<<it->gettimestamp<< "), ";
         }
         msg<<"]";
-}
+}*/
 
-void MP1Node::SendHBSomewhere(Address *src_addr, long heartbeat){
+/*void MP1Node::SendHBSomewhere(Address *src_addr, long heartbeat){
     int k=30;
         double prob = k / (double)memberNode->memberList.size();
         MessageHdr *msg;
@@ -349,7 +378,7 @@ void MP1Node::SendHBSomewhere(Address *src_addr, long heartbeat){
             }
     }
     free(msg);
-}
+} */
 /**
  * FUNCTION NAME: nodeLoopOps
  *
