@@ -236,7 +236,10 @@ void MP1Node::updateMember(MemberListEntry& member){
     updateMember.(member.getid(), member.getport(), member.gethearbeat());
 }
 
-int MP1Node::memcpyMemberListEntry(char * data, MemberListEntry& member)
+int MP1Node::memcpyMemberListEntry(char * data, MemberListEntry& member){
+
+     char * p = data;
+}
 
 
 /**
