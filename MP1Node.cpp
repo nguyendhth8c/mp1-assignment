@@ -317,6 +317,108 @@ bool MP1Node::recvJoinReq(void *env, char *data, int size){
      return true;
 }
 
+bool MP1Node::recvMemberList(const char * label, void *env, char *data, int size)
+{
+    if (size < (int) (sizeof(long)))
+    {
+        #ifdef DEBUGLOG
+        log->LOG(&memberNode->addr, "Message %s received with size wrong. Ignored. size[%s]", label, size);
+        #endif
+            return false;
+    }
+    long members;
+    memcpy(&members, data, sizeof(long));
+    data +=sizeof(long);
+    size -=sizeof(long);
+
+    if (size < (int)(members * (sizeof(int) + sizeof(short) + sizeof(log))))
+    {
+        #ifdef DEBUGLOG
+            log->LOG(&memberNode->addr, "Message %s received with size wrong. Ignored.", label);
+
+        #endif 
+                return false;
+    }
+
+    MemberListEntry member;
+        for (long i=0; i<members; i++)
+        {
+            memcpy(&member.id, data, sizeof(int));
+            data += sizeof(int);
+            memcpy(&member.port, data, sizeof(short));
+            data += sizeof(short);
+            memcpy(&member.heartbeat, data, sizeof(long));
+            data += sizeof(long);
+            member.timestamp = par->getcurrtime();
+            updateMember(member);
+
+        }
+
+        return true;
+}
+
+bool MP1Node::recvJoinRep(void *env, char *data, int size)
+{
+    if (size < (int)(sizeof(memberNode->addr.addr)))
+    {   
+    #ifdef
+        log->LOG(&memberNode->addr, "Message JOINREP received with size wrong. Ignored. size[%i]", size);
+    #endif
+        return false;
+    }
+
+    Address senderAddr;
+    memcpy(senderAddr.addr, data, sizeof(memberNode->addr.addr));
+    data += sizeof(memberNode->addr.addr);
+    size -= sizeof(memberNode->addr.addr);
+
+    if (!recvMemberList("JOINREP", env, data, size))
+    {
+        return false;
+    }
+
+    memberNode->inGroup = true;
+    return true;
+}
+
+
+bool MP1Node::recvHeartbeatReq(void *env, char *data, int size){
+    
+}
+
+
+bool MP1Node::recvHeartbeatRep(void *env, char *data, int size)
+{
+    if (size < (int)(sizeof(memberNode->addr.addr)))
+    {
+        #ifdef DEBUGLOG
+            log->LOG(&memberNode->addr, "Message HEARTBEATREP received with size wrong. Ignored.");
+        #endif
+            return false;
+    }
+    Address senderAddr;
+    memcpy(senderAddr.addr, data, sizeof(memberNode->addr.addr));
+
+    int id = *(int*)(&senderAddr.addr);
+    int port = *(short*)(&senderAddr.addr[4]);
+    vector<MemberListEntry>::iterator it = memberNode->memberList.begin();
+    for (++it; it != memberNode->memberList.end(); ++it)
+    {
+        if (it->id == id && it->port == port)
+        {
+            it->heatbeat++;
+            it->timestamp = par->getcurrtime();
+
+            return true;
+        }
+    }
+
+    #ifdef DEBUGLOG
+        log->LOG(&memberNode->addr, "Message HEARTBEATREP not found in member list.");
+    #endif
+        return false;
+}
+
 
 
 /**
@@ -340,6 +442,12 @@ bool MP1Node::recvCallBack(void *env, char *data, int size ) {
             return recvJoinReq(env, data + sizeof(MessageHdr), size - sizeof(MessageHdr));
         case JOINREP:
             return recvJoinRep(env, data + sizeof(MessageHdr), size - sizeof(MessageHdr));
+        case HEARTBEATREQ:
+            return recvHeartbeatReq(env, data + sizeof(MessageHdr), size - sizeof(MessageHdr));
+        case  
+            return recvHeartbeatRep(env, data + sizeof(MessageHdr), size - sizeof(MessageHdr));
+        case DUMMYLASTMSGTYPE:
+            return false;
 
 	/* assert(size >= sizeof(MessageHdr));
 	MessageHdr* msg = (MessageHdr*) data;
