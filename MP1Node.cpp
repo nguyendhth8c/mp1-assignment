@@ -93,12 +93,7 @@ void MP1Node::nodeStart(char *servaddrstr, short servport) {
  * DESCRIPTION: Find out who I am and start up
  */
 int MP1Node::initThisNode(Address *joinaddr) {
-	/*
-	 * This function is partially implemented and may require changes
-	 */
-	//int id = *(int*)(&memberNode->addr.addr);
-	//int port = *(short*)(&memberNode->addr.addr[4]);
-
+	
 	memberNode->bFailed = false;
 	memberNode->inited = true;
 	memberNode->inGroup = false;
@@ -163,7 +158,9 @@ int MP1Node::introduceSelfToGroup(Address *joinaddr) {
 int MP1Node::finishUpThisNode(){
    /*
     * Your code goes here
+
     */
+    return 0;
 }
 
 /**
@@ -261,6 +258,7 @@ void MP1Node::sendMemberList(const char * label, enum MsgTypes msgType, Address 
 
 MessageHdr * msg = (MessageHdr *) malloc(msgsize * sizeof(char));
 char * data = (char*)(msg + 1);
+
 msg->msgType = msgType;
 memcpy(data, &memberNode->addr.addr, sizeof(memberNode->addr.addr));
 data += sizeof(memberNode->addr.addr);
@@ -535,7 +533,7 @@ Address MP1Node::getJoinAddress()
 //tra ve 1 dia chi.
     Address joinaddr;
 
-    memset(&joinaddr, 0, sizeof(Address));
+    memset(&joinaddr, 0, sizeof(memberNode->addr.addr));
     *(int *)(&joinaddr.addr) = 1;//gan ip 1.0.0.0
     *(short *)(&joinaddr.addr[4]) = 0;//gan port 0;
 
